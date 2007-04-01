@@ -19,6 +19,20 @@ if exists("g:loaded_ReloadScript") || (v:version < 700)
 endif
 let g:loaded_ReloadScript = 1
 
+function! s:RemoveInclusionGuard( scriptName )
+    let l:scriptInclusionGuard = 'g:loaded_' . a:scriptName
+    if ! exists( l:scriptInclusionGuard )
+	"let l:scriptInclusionGuard = 'g:loaded_' . tolower(a:scriptName)
+    endif
+    if exists( l:scriptInclusionGuard )
+	execute 'unlet ' . l:scriptInclusionGuard
+    else
+	echohl WarningMsg
+	echomsg 'Warning: No inclusion guard variable found.'
+	echohl None
+    endif
+endfunction
+
 function! s:ReloadScript(...)
     if a:0 == 0
 	" Note: We do not check whether the current buffer contains a VIM
@@ -34,10 +48,9 @@ function! s:ReloadScript(...)
 	let l:sourceCommand = 'runtime'
 	" Note: the :runtime command does not complain if no script was found. 
     endif
-    let l:scriptInclusionGuard = 'g:loaded_' . l:scriptName
-    if exists( l:scriptInclusionGuard )
-	execute 'unlet ' . l:scriptInclusionGuard
-    endif
+
+    call s:RemoveInclusionGuard( l:scriptName )
+
     execute l:sourceCommand . ' ' . l:scriptFilespec
     echomsg 'Reloaded "' . l:scriptFilespec . '"'
 endfunction
