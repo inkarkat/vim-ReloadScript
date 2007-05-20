@@ -1,16 +1,20 @@
 " ReloadScript.vim: Reload a VIM script. 
 "
 "   Re-sources a VIM script. The script may use a multiple inclusion guard
-"   variable g:loaded_<scriptname>. If you specify the scriptname (without .vim
-"   extension), the script must reside in $VIMRUNTIME/plugin/<scriptname>.vim.
-"   Otherwise, the current buffer is used. 
+"   variable g:loaded_<scriptname> (with <scriptname> having either the same
+"   case as specified or all lowercase.) 
+"   If you specify the scriptname (without .vim extension), the script must
+"   reside in $VIMRUNTIME/plugin/<scriptname>.vim. Otherwise, the current buffer
+"   is used. 
 "
-"* USAGE:
+" USAGE:
 "   :ReloadScript		Re-sources the current buffer. 
 "   :ReloadScript <scriptname>	Re-sources the passed plugin script. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	002	02-Apr-2007	Inclusion guard variable can have the same case
+"				as the script name or be all lowercase. 
 "	0.01	14-Dec-2006	file creation
 
 " Avoid installing twice or when in compatible mode
@@ -22,13 +26,13 @@ let g:loaded_ReloadScript = 1
 function! s:RemoveInclusionGuard( scriptName )
     let l:scriptInclusionGuard = 'g:loaded_' . a:scriptName
     if ! exists( l:scriptInclusionGuard )
-	"let l:scriptInclusionGuard = 'g:loaded_' . tolower(a:scriptName)
+	let l:scriptInclusionGuard = 'g:loaded_' . tolower(a:scriptName)
     endif
     if exists( l:scriptInclusionGuard )
 	execute 'unlet ' . l:scriptInclusionGuard
     else
 	echohl WarningMsg
-	echomsg 'Warning: No inclusion guard variable found.'
+	echomsg 'No inclusion guard variable found.'
 	echohl None
     endif
 endfunction
