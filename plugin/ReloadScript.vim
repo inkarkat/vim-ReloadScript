@@ -1,18 +1,47 @@
-" ReloadScript.vim: Reload a VIM script. 
+" ReloadScript.vim: Reload a VIM script during script development. 
 "
+" DESCRIPTION:
 "   Re-sources a VIM script. The script may use a multiple inclusion guard
 "   variable g:loaded_<scriptname> (with <scriptname> having either the same
 "   case as specified or all lowercase.) 
 "   If you specify the scriptname (without .vim extension), the script must
-"   reside in $VIMRUNTIME/plugin/<scriptname>.vim. Otherwise, the current buffer
-"   is used. 
+"   reside in $VIMRUNTIME/plugin/<scriptname>.vim. If you execute :ReloadScript
+"   without passing a scriptname, the current buffer is re-sourced. 
 "
 " USAGE:
 "   :ReloadScript		Re-sources the current buffer. 
 "   :ReloadScript <scriptname>	Re-sources the passed plugin script. 
 "
+" INSTALLATION:
+"   Put the script into your user or system VIM plugin directory (e.g.
+"   ~/.vim/plugin). 
+"
+" DEPENDENCIES:
+"   - Requires VIM 7.0 or higher. 
+"
+" CONFIGURATION:
+"
+" LIMITATIONS:
+"   - The script cannot reload itself :-)
+"
+" ASSUMPTIONS:
+"   Not every script supports reloading. There may be error messages like
+"   "function already exists". To support reloading, the script should use the
+"   bang (!) variants of :function! and :command!, which will automatically
+"   override already existing elements. 
+"
+"   Ensure that the script uses a multiple inclusion guard variable that
+"   conforms to the conventions mentioned above. The :ReloadScript command will
+"   issue a warning if it cannot find the inclusion guard variable. 
+"
+" TODO:
+"
+" Copyright: (C) 2007 by Ingo Karkat
+"   The VIM LICENSE applies to this script; see ':help copyright'. 
+"
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"   1.00.003	22-May-2007	Added documentation. 
 "	002	02-Apr-2007	Inclusion guard variable can have the same case
 "				as the script name or be all lowercase. 
 "	0.01	14-Dec-2006	file creation
