@@ -91,3 +91,4 @@ endfunction
 "command! -nargs=1 -complete=file ReloadScript if exists("g:loaded_<args>") | unlet g:loaded_<args> | endif | runtime plugin/<args>.vim
 command! -nargs=? -complete=file ReloadScript call <SID>ReloadScript(<f-args>)
 
+" vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
