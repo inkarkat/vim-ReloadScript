@@ -40,11 +40,13 @@
 "
 " TODO:
 "
-" Copyright: (C) 2007 by Ingo Karkat
+" Copyright: (C) 2007-2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"   1.10.005	25-Jul-2008	Combined missing inclusion guard warning with
+"				reload message to avoid the "Hit ENTER" prompt. 
 "   1.10.004	28-Feb-2008	A scriptname argument with path and/or extension
 "				is sourced as-is. This allows a third usage:
 "				:ReloadScript <path/to/script.vim>
@@ -54,7 +56,7 @@
 "	0.01	14-Dec-2006	file creation
 
 " Avoid installing twice or when in compatible mode
-if exists("g:loaded_ReloadScript") || (v:version < 700)
+if exists('g:loaded_ReloadScript') || (v:version < 700)
     finish
 endif
 let g:loaded_ReloadScript = 1
@@ -66,10 +68,9 @@ function! s:RemoveInclusionGuard( scriptName )
     endif
     if exists( l:scriptInclusionGuard )
 	execute 'unlet ' . l:scriptInclusionGuard
+	return 1
     else
-	echohl WarningMsg
-	echomsg 'No inclusion guard variable found.'
-	echohl None
+	return 0
     endif
 endfunction
 
@@ -95,10 +96,16 @@ function! s:ReloadScript(...)
 	endif
     endif
 
-    call s:RemoveInclusionGuard( l:scriptName )
+    let l:isRemovedInclusionGuard = s:RemoveInclusionGuard( l:scriptName )
 
     execute l:sourceCommand . ' ' . l:scriptFilespec
-    echomsg 'Reloaded "' . l:scriptFilespec . '"'
+    if l:isRemovedInclusionGuard
+	echomsg 'Reloaded "' . l:scriptFilespec . '"'
+    else
+	echohl WarningMsg
+	echomsg 'Reloaded "' . l:scriptFilespec . '"; no inclusion guard variable found.'
+	echohl None
+    endif
 endfunction
 
 "command! -nargs=1 -complete=file ReloadScript if exists("g:loaded_<args>") | unlet g:loaded_<args> | endif | runtime plugin/<args>.vim
