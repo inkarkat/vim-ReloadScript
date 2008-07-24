@@ -39,6 +39,9 @@
 "   issue a warning if it cannot find the inclusion guard variable. 
 "
 " TODO:
+"   - For compiler, ftplugin, indent and syntax scripts, find all buffers that
+"     have the script sourced and re-source in that buffer. Currently, one must
+"     manually :e! these buffers. 
 "
 " Copyright: (C) 2007-2008 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -47,6 +50,9 @@
 " REVISION	DATE		REMARKS 
 "   1.10.005	25-Jul-2008	Combined missing inclusion guard warning with
 "				reload message to avoid the "Hit ENTER" prompt. 
+"				No missing inclusion guard warning for scripts
+"				that do not need one (e.g. after-directory,
+"				autoload, ftplugin, indent, syntax, ...)
 "   1.10.004	28-Feb-2008	A scriptname argument with path and/or extension
 "				is sourced as-is. This allows a third usage:
 "				:ReloadScript <path/to/script.vim>
@@ -74,6 +80,17 @@ function! s:RemoveInclusionGuard( scriptName )
     endif
 endfunction
 
+function! s:IsScriptTypeWithInclusionGuard( scriptFileSpec )
+    " Scripts that only modify the current buffer do not have a global inclusion
+    " guard (but should have a buffer-local one). 
+    " Autoload, color scheme, keymap and language scripts do not need an
+    " inclusion guard. 
+    " Scripts in the after-directory do not need an inclusion guard. 
+    let l:scriptDir = fnamemodify( a:scriptFileSpec, ':p:h:t' )
+    let l:scriptParentDir = fnamemodify( a:scriptFileSpec, ':p:h:h:t' )
+    return (l:scriptDir !~? '^\%(autoload\|colors\|compiler\|ftplugin\|indent\|keymap\|lang\|syntax\)$' && l:scriptParentDir !~? '^after$')
+endfunction
+
 function! s:ReloadScript(...)
     if a:0 == 0
 	" Note: We do not check whether the current buffer contains a VIM
@@ -81,6 +98,7 @@ function! s:ReloadScript(...)
 	let l:scriptName = expand('%:t:r')
 	let l:scriptFilespec = expand('%')
 	let l:sourceCommand = 'source'
+	let l:canContainInclusionGuard = s:IsScriptTypeWithInclusionGuard(l:scriptFilespec)
     else
 	let l:scriptName = fnamemodify( a:1, ':t:r' ) " Strip off file path and extension. 
 	if l:scriptName == a:1
@@ -94,12 +112,13 @@ function! s:ReloadScript(...)
 	    let l:scriptFilespec = a:1
 	    let l:sourceCommand = 'source'
 	endif
+	let l:canContainInclusionGuard = 1
     endif
 
     let l:isRemovedInclusionGuard = s:RemoveInclusionGuard( l:scriptName )
 
     execute l:sourceCommand . ' ' . l:scriptFilespec
-    if l:isRemovedInclusionGuard
+    if ! l:canContainInclusionGuard || l:isRemovedInclusionGuard
 	echomsg 'Reloaded "' . l:scriptFilespec . '"'
     else
 	echohl WarningMsg
