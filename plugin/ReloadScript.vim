@@ -80,6 +80,7 @@ function! s:RemoveInclusionGuard( scriptName )
     endif
 endfunction
 
+let s:noGlobalInclusionGuardPattern = '^\%(autoload\|colors\|compiler\|ftplugin\|indent\|keymap\|lang\|syntax\)$'
 function! s:IsScriptTypeWithInclusionGuard( scriptFileSpec )
     " Scripts that only modify the current buffer do not have a global inclusion
     " guard (but should have a buffer-local one). 
@@ -87,8 +88,13 @@ function! s:IsScriptTypeWithInclusionGuard( scriptFileSpec )
     " inclusion guard. 
     " Scripts in the after-directory do not need an inclusion guard. 
     let l:scriptDir = fnamemodify( a:scriptFileSpec, ':p:h:t' )
+    " Because VIM supports both .vim/ftplugin/filetype_*.vim and
+    " .vim/ftplugin/filetype/*.vim, we need to check the two directories
+    " upwards. 
     let l:scriptParentDir = fnamemodify( a:scriptFileSpec, ':p:h:h:t' )
-    return (l:scriptDir !~? '^\%(autoload\|colors\|compiler\|ftplugin\|indent\|keymap\|lang\|syntax\)$' && l:scriptParentDir !~? '^after$')
+    let l:scriptParentParentDir = fnamemodify( a:scriptFileSpec, ':p:h:h:h:t' )
+
+    return ! (l:scriptDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? '^after$' || l:scriptParentParentDir =~? '^after$')
 endfunction
 
 function! s:ReloadScript(...)
