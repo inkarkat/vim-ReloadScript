@@ -128,7 +128,8 @@ function! s:ReloadScript(...)
 	echomsg 'Reloaded "' . l:scriptFilespec . '"'
     else
 	echohl WarningMsg
-	echomsg 'Reloaded "' . l:scriptFilespec . '"; no inclusion guard variable found.'
+	let v:warningmsg = 'Reloaded "' . l:scriptFilespec . '"; no inclusion guard variable found.'
+	echomsg v:warningmsg
 	echohl None
     endif
 endfunction
