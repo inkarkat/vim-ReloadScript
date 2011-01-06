@@ -1,12 +1,12 @@
-" ReloadScript.vim: Reload a VIM script during script development. 
+" ReloadScript.vim: Reload a Vim script during script development. 
 "
 " DESCRIPTION:
-"   Re-sources a VIM script. The script may use a multiple inclusion guard
+"   Re-sources a Vim script. The script may use a multiple inclusion guard
 "   variable g:loaded_{scriptname} (with {scriptname} having either the same
 "   case as specified or all lowercase.) 
 "   If you specify the bare scriptname (without .vim extension), the script must
 "   reside in $VIMRUNTIME/plugin/{scriptname}.vim. Otherwise, the passed
-"   filespec is interpreted as the file system location of a VIM script and
+"   filespec is interpreted as the file system location of a Vim script and
 "   sourced as-is. 
 "   If you execute :ReloadScript without passing a scriptname, the current
 "   buffer is re-sourced. 
@@ -17,11 +17,11 @@
 "   :ReloadScript {path/to/script.vim}	Re-sources the passed file. 
 "
 " INSTALLATION:
-"   Put the script into your user or system VIM plugin directory (e.g.
+"   Put the script into your user or system Vim plugin directory (e.g.
 "   ~/.vim/plugin). 
 "
 " DEPENDENCIES:
-"   - Requires VIM 7.0 or higher. 
+"   - Requires Vim 7.0 or higher. 
 "
 " CONFIGURATION:
 "
@@ -81,39 +81,46 @@ function! s:RemoveInclusionGuard( scriptName )
 endfunction
 
 let s:noGlobalInclusionGuardPattern = '^\%(autoload\|colors\|compiler\|ftplugin\|indent\|keymap\|lang\|syntax\)$'
-function! s:IsScriptTypeWithInclusionGuard( scriptFileSpec )
+function! s:IsScriptTypeWithInclusionGuard( scriptFilespec )
     " Scripts that only modify the current buffer do not have a global inclusion
     " guard (but should have a buffer-local one). 
     " Autoload, color scheme, keymap and language scripts do not need an
     " inclusion guard. 
     " Scripts in the after-directory do not need an inclusion guard. 
-    let l:scriptDir = fnamemodify( a:scriptFileSpec, ':p:h:t' )
-    " Because VIM supports both .vim/ftplugin/filetype_*.vim and
+    let l:scriptDir = fnamemodify( a:scriptFilespec, ':p:h:t' )
+    " Because Vim supports both .vim/ftplugin/filetype_*.vim and
     " .vim/ftplugin/filetype/*.vim, we need to check the two directories
     " upwards. 
-    let l:scriptParentDir = fnamemodify( a:scriptFileSpec, ':p:h:h:t' )
-    let l:scriptParentParentDir = fnamemodify( a:scriptFileSpec, ':p:h:h:h:t' )
+    let l:scriptParentDir = fnamemodify( a:scriptFilespec, ':p:h:h:t' )
+    let l:scriptParentParentDir = fnamemodify( a:scriptFilespec, ':p:h:h:h:t' )
 
     return ! (l:scriptDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? '^after$' || l:scriptParentParentDir =~? '^after$')
 endfunction
 
-function! s:ReloadScript(...)
+function! s:ReloadScript( ... )
     if a:0 == 0
-	" Note: We do not check whether the current buffer contains a VIM
+	" Note: We do not check whether the current buffer contains a Vim
 	" script; :source will tell. 
 	let l:scriptName = expand('%:t:r')
 	let l:scriptFilespec = expand('%')
+	if empty(l:scriptFilespec)
+	    let v:errmsg = 'No file name'
+	    echohl ErrorMsg
+	    echomsg v:errmsg
+	    echohl None
+	    return
+	endif
 	let l:sourceCommand = 'source'
 	let l:canContainInclusionGuard = s:IsScriptTypeWithInclusionGuard(l:scriptFilespec)
     else
 	let l:scriptName = fnamemodify( a:1, ':t:r' ) " Strip off file path and extension. 
-	if l:scriptName == a:1
+	if l:scriptName ==# a:1
 	    " A bare scriptname has been passed. 
 	    let l:scriptFilespec = 'plugin/' . l:scriptName . '.vim'
 	    let l:sourceCommand = 'runtime'
 	    " Note: the :runtime command does not complain if no script was found. 
 	else
-	    " We assume the passed filespec represents an existing VIM script
+	    " We assume the passed filespec represents an existing Vim script
 	    " somewhere on the file system. 
 	    let l:scriptFilespec = a:1
 	    let l:sourceCommand = 'source'
@@ -121,14 +128,30 @@ function! s:ReloadScript(...)
 	let l:canContainInclusionGuard = 1
     endif
 
+    if l:sourceCommand ==# 'source'
+	if ! filereadable(l:scriptFilespec)
+	    let v:errmsg = "Can't open file " . l:scriptFilespec
+	    echohl ErrorMsg
+	    echomsg v:errmsg
+	    echohl None
+	    return
+	endif
+    endif
+
     let l:isRemovedInclusionGuard = s:RemoveInclusionGuard( l:scriptName )
 
-    execute l:sourceCommand . ' ' . l:scriptFilespec
+    " Note: We do not execute the command inside a try...catch, because then
+    " sourcing an invalid Vim script would only print the first error, not all
+    " bad lines, like :source does. Instead, we check for the existence of the
+    " sourced file beforehand, and manually generate an error if it doesn't
+    " exist. 
+    execute l:sourceCommand l:scriptFilespec
+
     if ! l:canContainInclusionGuard || l:isRemovedInclusionGuard
 	echomsg 'Reloaded "' . l:scriptFilespec . '"'
     else
-	echohl WarningMsg
 	let v:warningmsg = 'Reloaded "' . l:scriptFilespec . '"; no inclusion guard variable found.'
+	echohl WarningMsg
 	echomsg v:warningmsg
 	echohl None
     endif
