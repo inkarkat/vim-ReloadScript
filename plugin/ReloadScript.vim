@@ -2,10 +2,10 @@
 "
 " DESCRIPTION:
 "   Re-sources a VIM script. The script may use a multiple inclusion guard
-"   variable g:loaded_<scriptname> (with <scriptname> having either the same
+"   variable g:loaded_{scriptname} (with {scriptname} having either the same
 "   case as specified or all lowercase.) 
 "   If you specify the bare scriptname (without .vim extension), the script must
-"   reside in $VIMRUNTIME/plugin/<scriptname>.vim. Otherwise, the passed
+"   reside in $VIMRUNTIME/plugin/{scriptname}.vim. Otherwise, the passed
 "   filespec is interpreted as the file system location of a VIM script and
 "   sourced as-is. 
 "   If you execute :ReloadScript without passing a scriptname, the current
@@ -13,8 +13,8 @@
 "
 " USAGE:
 "   :ReloadScript			Re-sources the current buffer. 
-"   :ReloadScript <scriptname>		Re-sources the passed plugin script. 
-"   :ReloadScript <path/to/script.vim>	Re-sources the passed file. 
+"   :ReloadScript {scriptname}		Re-sources the passed plugin script. 
+"   :ReloadScript {path/to/script.vim}	Re-sources the passed file. 
 "
 " INSTALLATION:
 "   Put the script into your user or system VIM plugin directory (e.g.
@@ -55,7 +55,7 @@
 "				autoload, ftplugin, indent, syntax, ...)
 "   1.10.004	28-Feb-2008	A scriptname argument with path and/or extension
 "				is sourced as-is. This allows a third usage:
-"				:ReloadScript <path/to/script.vim>
+"				:ReloadScript {path/to/script.vim}
 "   1.00.003	22-May-2007	Added documentation. 
 "	002	02-Apr-2007	Inclusion guard variable can have the same case
 "				as the script name or be all lowercase. 
