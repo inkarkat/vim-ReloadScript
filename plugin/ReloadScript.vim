@@ -43,11 +43,19 @@
 "     have the script sourced and re-source in that buffer. Currently, one must
 "     manually :e! these buffers. 
 "
-" Copyright: (C) 2007-2008 by Ingo Karkat
+" Copyright: (C) 2007-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"   1.20.006	07-Jan-2011	BUG: Avoiding "E471: Argument required" error on
+"				empty buffer name. 
+"				ENH: Explicitly checking for the existence of
+"				the file, as we don't want to put the :source
+"				command inside try...catch (it would stop
+"				showing all resulting errors and show only the
+"				first), and because :runtime doesn't complain at
+"				all. 
 "   1.10.005	25-Jul-2008	Combined missing inclusion guard warning with
 "				reload message to avoid the "Hit ENTER" prompt. 
 "				No missing inclusion guard warning for scripts
@@ -128,14 +136,20 @@ function! s:ReloadScript( ... )
 	let l:canContainInclusionGuard = 1
     endif
 
-    if l:sourceCommand ==# 'source'
-	if ! filereadable(l:scriptFilespec)
-	    let v:errmsg = "Can't open file " . l:scriptFilespec
-	    echohl ErrorMsg
-	    echomsg v:errmsg
-	    echohl None
-	    return
-	endif
+    " Assumption: 'wildignore' doesn't filter away *.vim files. Starting with
+    " Vim 7.3 we will be able to pass the option {flag} to glob()/ globpath(). 
+    if l:sourceCommand ==# 'source' && empty(glob(l:scriptFilespec))
+	let v:errmsg = "Can't source file " . l:scriptFilespec
+	echohl ErrorMsg
+	echomsg v:errmsg
+	echohl None
+	return
+    elseif l:sourceCommand ==# 'runtime' && empty(globpath(&runtimepath, l:scriptFilespec))
+	let v:errmsg = "Can't runtime " . l:scriptFilespec
+	echohl ErrorMsg
+	echomsg v:errmsg
+	echohl None
+	return
     endif
 
     let l:isRemovedInclusionGuard = s:RemoveInclusionGuard( l:scriptName )
