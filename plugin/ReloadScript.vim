@@ -1,47 +1,7 @@
 " ReloadScript.vim: Reload a Vim script during script development. 
 "
-" DESCRIPTION:
-"   Re-sources a Vim script. The script may use a multiple inclusion guard
-"   variable g:loaded_{scriptname} (with {scriptname} having either the same
-"   case as specified or all lowercase.) 
-"   If you specify the bare scriptname (without .vim extension), the script must
-"   reside in $VIMRUNTIME/plugin/{scriptname}.vim. Otherwise, the passed
-"   filespec is interpreted as the file system location of a Vim script and
-"   sourced as-is. 
-"   If you execute :ReloadScript without passing a scriptname, the current
-"   buffer is re-sourced. 
-"
-" USAGE:
-"   :ReloadScript			Re-sources the current buffer. 
-"   :ReloadScript {scriptname}		Re-sources the passed plugin script. 
-"   :ReloadScript {path/to/script.vim}	Re-sources the passed file. 
-"
-" INSTALLATION:
-"   Put the script into your user or system Vim plugin directory (e.g.
-"   ~/.vim/plugin). 
-"
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
-"
-" CONFIGURATION:
-"
-" LIMITATIONS:
-"   - The script cannot reload itself :-)
-"
-" ASSUMPTIONS:
-"   Not every script supports reloading. There may be error messages like
-"   "function already exists". To support reloading, the script should use the
-"   bang (!) variants of :function! and :command!, which will automatically
-"   override already existing elements. 
-"
-"   Ensure that the script uses a multiple inclusion guard variable that
-"   conforms to the conventions mentioned above. The :ReloadScript command will
-"   issue a warning if it cannot find the inclusion guard variable. 
-"
-" TODO:
-"   - For compiler, ftplugin, indent and syntax scripts, find all buffers that
-"     have the script sourced and re-source in that buffer. Currently, one must
-"     manually :e! these buffers. 
 "
 " Copyright: (C) 2007-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -69,7 +29,7 @@
 "				as the script name or be all lowercase. 
 "	0.01	14-Dec-2006	file creation
 
-" Avoid installing twice or when in compatible mode
+" Avoid installing twice or when in unsupported Vim version. 
 if exists('g:loaded_ReloadScript') || (v:version < 700)
     finish
 endif
@@ -159,6 +119,8 @@ function! s:ReloadScript( ... )
     " bad lines, like :source does. Instead, we check for the existence of the
     " sourced file beforehand, and manually generate an error if it doesn't
     " exist. 
+    " Assumption: The script filespec does not contain special characters, so we
+    " don't need to fnameescape(). 
     execute l:sourceCommand l:scriptFilespec
 
     if ! l:canContainInclusionGuard || l:isRemovedInclusionGuard
