@@ -24,6 +24,9 @@ is re-sourced.
 
 RELATED WORKS								     *
 
+- scriptease.vim (vimscript #4394) has a :Runtime command that unlets any
+  include guards first
+
 ==============================================================================
 USAGE							  *ReloadScript-usage*
 							       *:ReloadScript*
@@ -103,7 +106,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2007-2012 Ingo Karkat
+Copyright: (C) 2007-2014 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
