@@ -17,10 +17,10 @@ Re-sources a Vim script. The script may use a multiple inclusion guard
 variable g:loaded_{scriptname} (with {scriptname} having either the same case
 as specified or all lowercase.)
 If you specify the bare scriptname (without .vim extension), the script must
-reside in $VIMRUNTIME/plugin/{scriptname}.vim. Otherwise, the passed filespec
-is interpreted as the file system location of a Vim script and sourced as-is.
-If you execute :ReloadScript without passing a scriptname, the current buffer
-is re-sourced.
+reside in plugin/{scriptname}.vim somewhere on 'runtimepath'. Otherwise, the
+passed filespec is interpreted as the file system location of a Vim script and
+sourced as-is. If you execute |:ReloadScript| without passing a scriptname,
+the current buffer is re-sourced.
 
 RELATED WORKS								     *
 
@@ -58,11 +58,11 @@ ASSUMPTIONS					    *ReloadScript-assumptions*
 
 Not every script supports reloading. There may be error messages like
 "function already exists". To support reloading, the script should use the
-bang (!) variants of :function! and :command!, which will automatically
+bang (!) variants of |:function|! and |:command|!, which will automatically
 override already existing elements.
 
 Ensure that the script uses a multiple inclusion guard variable that conforms
-to the conventions mentioned above. The :ReloadScript command will issue a
+to the conventions mentioned above. The |:ReloadScript| command will issue a
 warning if it cannot find the inclusion guard variable.
 
 KNOWN PROBLEMS					 *ReloadScript-known-problems*
