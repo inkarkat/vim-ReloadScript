@@ -3,11 +3,15 @@
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
 "
-" Copyright: (C) 2007-2011 by Ingo Karkat
+" Copyright: (C) 2007-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS
+"   1.21.007	27-Aug-2012	Avoid <f-args> because of its unescaping
+"				behavior.
+"				Also no global inclusion guard for ftdetect
+"				scripts.
 "   1.20.006	07-Jan-2011	BUG: Avoiding "E471: Argument required" error on
 "				empty buffer name.
 "				ENH: Explicitly checking for the existence of
@@ -48,7 +52,7 @@ function! s:RemoveInclusionGuard( scriptName )
     endif
 endfunction
 
-let s:noGlobalInclusionGuardPattern = '^\%(autoload\|colors\|compiler\|ftplugin\|indent\|keymap\|lang\|syntax\)$'
+let s:noGlobalInclusionGuardPattern = '^\%(autoload\|colors\|compiler\|ftdetect\|ftplugin\|indent\|keymap\|lang\|syntax\)$'
 function! s:IsScriptTypeWithInclusionGuard( scriptFilespec )
     " Scripts that only modify the current buffer do not have a global inclusion
     " guard (but should have a buffer-local one).
@@ -65,8 +69,8 @@ function! s:IsScriptTypeWithInclusionGuard( scriptFilespec )
     return ! (l:scriptDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? s:noGlobalInclusionGuardPattern || l:scriptParentDir =~? '^after$' || l:scriptParentParentDir =~? '^after$')
 endfunction
 
-function! s:ReloadScript( ... )
-    if a:0 == 0
+function! s:ReloadScript( scriptFilespec )
+    if empty(a:scriptFilespec)
 	" Note: We do not check whether the current buffer contains a Vim
 	" script; :source will tell.
 	let l:scriptName = expand('%:t:r')
@@ -81,8 +85,8 @@ function! s:ReloadScript( ... )
 	let l:sourceCommand = 'source'
 	let l:canContainInclusionGuard = s:IsScriptTypeWithInclusionGuard(l:scriptFilespec)
     else
-	let l:scriptName = fnamemodify( a:1, ':t:r' ) " Strip off file path and extension.
-	if l:scriptName ==# a:1
+	let l:scriptName = fnamemodify( a:scriptFilespec, ':t:r' ) " Strip off file path and extension.
+	if l:scriptName ==# a:scriptFilespec
 	    " A bare scriptname has been passed.
 	    let l:scriptFilespec = 'plugin/' . l:scriptName . '.vim'
 	    let l:sourceCommand = 'runtime'
@@ -90,7 +94,7 @@ function! s:ReloadScript( ... )
 	else
 	    " We assume the passed filespec represents an existing Vim script
 	    " somewhere on the file system.
-	    let l:scriptFilespec = a:1
+	    let l:scriptFilespec = a:scriptFilespec
 	    let l:sourceCommand = 'source'
 	endif
 	let l:canContainInclusionGuard = 1
@@ -134,6 +138,6 @@ function! s:ReloadScript( ... )
 endfunction
 
 "command! -nargs=1 -complete=file ReloadScript if exists("g:loaded_<args>") | unlet g:loaded_<args> | endif | runtime plugin/<args>.vim
-command! -nargs=? -complete=file ReloadScript call <SID>ReloadScript(<f-args>)
+command! -nargs=? -complete=file ReloadScript call <SID>ReloadScript(<q-args>)
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
